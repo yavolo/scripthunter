@@ -74,7 +74,7 @@ domain=`echo "$1"| unfurl domain`
 if [ "$silent" = "false" ]; then
     echo "[*] Running GAU"
 fi
-echo "$target" | gau | unfurl format "%s://%d%:%P%p" | grep -iE "\.swf$" | sort -u > $TMPDIR/gauswf.txt
+echo "$target" | gau | unfurl format "%s://%d%:%P%p" | grep -iE "\.swf$" | sort -u > $TMPDIR/gaujs.txt
 gaucount="$(wc -l $TMPDIR/gaujs.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
     echo "[+] GAU found $gaucount scripts!"
@@ -91,7 +91,7 @@ if [ "$silent" = "false" ]; then
 fi
 
 cat $TMPDIR/gaujs.txt $TMPDIR/hakrawler.txt | sort -u > $TMPDIR/gauhak.txt
-cat $TMPDIR/gauhak.txt | unfurl format "%s://%d%:%P%p" | grep "\.swf$" | rev | cut -d "/" -f2- | rev | sort -u > $TMPDIR/swfdirs.txt
+cat $TMPDIR/gauhak.txt | unfurl format "%s://%d%:%P%p" | grep "\.swf$" | rev | cut -d "/" -f2- | rev | sort -u > $TMPDIR/jsdirs.txt
 touch $TMPDIR/ffuf.txt
 jsdircount="$(wc -l $TMPDIR/jsdirs.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
