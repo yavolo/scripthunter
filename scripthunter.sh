@@ -74,7 +74,7 @@ domain=`echo "$1"| unfurl domain`
 if [ "$silent" = "false" ]; then
     echo "[*] Running GAU"
 fi
-echo "$target" | gau | unfurl format "%s://%d%:%P%p" | grep -iE "\.js$" | sort -u > $TMPDIR/gaujs.txt
+echo "$target" | gau | unfurl format "%s://%d%:%P%p" | grep -iE "\.swf$" | sort -u > $TMPDIR/gauswf.txt
 gaucount="$(wc -l $TMPDIR/gaujs.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
     echo "[+] GAU found $gaucount scripts!"
@@ -84,18 +84,18 @@ if [ "$silent" = "false" ]; then
     echo "[*] Running hakrawler"
 fi
 hakrawler -js -url $target -plain -depth 2 -scope strict -insecure > $TMPDIR/hakrawl1.txt
-cat $TMPDIR/hakrawl1.txt| unfurl format "%s://%d%:%P%p" | grep -iE "\.js$" | sort -u > $TMPDIR/hakrawler.txt
+cat $TMPDIR/hakrawl1.txt| unfurl format "%s://%d%:%P%p" | grep -iE "\.swf$" | sort -u > $TMPDIR/hakrawler.txt
 hakcount="$(wc -l $TMPDIR/hakrawler.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
     echo "[+] HAKRAWLER found $hakcount scripts!"
 fi
 
 cat $TMPDIR/gaujs.txt $TMPDIR/hakrawler.txt | sort -u > $TMPDIR/gauhak.txt
-cat $TMPDIR/gauhak.txt | unfurl format "%s://%d%:%P%p" | grep "\.js$" | rev | cut -d "/" -f2- | rev | sort -u > $TMPDIR/jsdirs.txt
+cat $TMPDIR/gauhak.txt | unfurl format "%s://%d%:%P%p" | grep "\.swf$" | rev | cut -d "/" -f2- | rev | sort -u > $TMPDIR/swfdirs.txt
 touch $TMPDIR/ffuf.txt
 jsdircount="$(wc -l $TMPDIR/jsdirs.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
-    echo "[*] Found $jsdircount directories containing .js files."
+    echo "[*] Found $jsdircount directories containing .swf files."
 fi
 cat $jsdirwl | while read knowndir; do
     echo "$target/$knowndir" >> $TMPDIR/jsdirs.txt
@@ -106,8 +106,8 @@ cat $TMPDIR/jsdirs.txt | sort -u | while read jsdir; do
         echo "[*] Running FFUF on $jsdir/"
     fi
     # for more thorough, add .min.js,.common.js,.built.js,.chunk.js,.bundled.js,...
-    ffuf -w $wordlist -u $jsdir/FUZZ -e .js,.min.js -mc 200,304 -o $TMPDIR/ffuf.json -s -t 100 > /dev/null
-    cat $TMPDIR/ffuf.json | jq -r ".results[].url" | grep "\.js" | unfurl format "%s://%d%:%P%p" | grep -iE "\.js$" | sort -u >$TMPDIR/ffuf_tmp.txt
+    ffuf -w $wordlist -u $jsdir/FUZZ -e .swf -mc 200,304 -o $TMPDIR/ffuf.json -s -t 100 > /dev/null
+    cat $TMPDIR/ffuf.json | jq -r ".results[].url" | grep "\.swf" | unfurl format "%s://%d%:%P%p" | grep -iE "\.swf$" | sort -u >$TMPDIR/ffuf_tmp.txt
     cat $TMPDIR/ffuf_tmp.txt >> $TMPDIR/ffuf.txt
     ffuftmpcount="$(wc -l $TMPDIR/ffuf_tmp.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
     if [ "$silent" = "false" ]; then
@@ -118,7 +118,7 @@ done
 #python3 /opt/LinkFinder/linkfinder.py -d -i $target -o cli >> linkfinder.txt
 
 
-cat $TMPDIR/gauhak.txt $TMPDIR/ffuf.txt | grep "\.js" | grep -v "Running against:" |sort -u > $TMPDIR/results/scripts-$domain.txt
+cat $TMPDIR/gauhak.txt $TMPDIR/ffuf.txt | grep "\.swf" | grep -v "Running against:" |sort -u > $TMPDIR/results/scripts-$domain.txt
 linecount="$(wc -l $TMPDIR/results/scripts-$domain.txt | sed -e 's/^[[:space:]]*//' | cut -d " " -f 1)"
 if [ "$silent" = "false" ]; then
     echo "[+] Checking Script Responsiveness of $linecount scripts.."
